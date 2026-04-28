@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: playto_postgres
+    environment:
+      POSTGRES_DB: payout_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache & Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: playto_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Django Application
+  web:
+    build: .
+    container_name: playto_web
+    command: >
+      bash -c "python manage.py migrate &&
+               python manage.py seed_demo_data &&
+               gunicorn payout_engine.wsgi:application --bind 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: "docker-dev-secret-change-in-production"
+      DJANGO_DB: "postgres"
+      DB_NAME: "payout_db"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - .:/app
+
+  # Celery Worker (background task processor)
+  celery:
+    build: .
+    container_name: playto_celery
+    command: celery -A payout_engine worker --loglevel=info
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: "docker-dev-secret-change-in-production"
+      DJANGO_DB: "postgres"
+      DB_NAME: "payout_db"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app
+
+  # Celery Beat (periodic task scheduler)
+  celery-beat:
+    build: .
+    container_name: playto_celery_beat
+    command: celery -A payout_engine beat --loglevel=info
+    environment:
+      DEBUG: "False"
+      SECRET_KEY: "docker-dev-secret-change-in-production"
+      DJANGO_DB: "postgres"
+      DB_NAME: "payout_db"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/app
+
+volumes:
+  postgres_data:
+  redis_data:
