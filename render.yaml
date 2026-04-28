@@ -96,7 +96,6 @@ databases:
     plan: free
     postgresMajorVersion: "15"
 
-services:
+redis:
   - name: redis-cache
-    type: redis
     plan: free
