@@ -28,7 +28,7 @@ services:
           type: redis
           property: connectionString
 
-  - type: background_worker
+  - type: worker
     name: payout-worker
     env: python
     plan: free
@@ -59,7 +59,7 @@ services:
           type: redis
           property: connectionString
 
-  - type: background_worker
+  - type: worker
     name: payout-beat
     env: python
     plan: free
