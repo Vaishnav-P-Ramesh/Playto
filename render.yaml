@@ -88,13 +88,10 @@ services:
           name: redis-cache
           type: redis
           property: connectionString
+  - type: redis
+    name: redis-cache
+    plan: free
 
 databases:
   - name: payout-db
-    engine: postgres
-    plan: free
-    postgresVersion: "15"
-
-redis:
-  - name: redis-cache
     plan: free
