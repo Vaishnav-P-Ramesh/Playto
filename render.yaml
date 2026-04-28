@@ -4,8 +4,7 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: >-
-      bash -lc "python manage.py migrate --noinput && python manage.py seed_demo_data && exec gunicorn payout_engine.wsgi:application --bind 0.0.0.0:$PORT"
+    startCommand: gunicorn payout_engine.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DEBUG
         value: "False"
@@ -94,7 +93,7 @@ databases:
   - name: payout-db
     engine: postgres
     plan: free
-    postgresMajorVersion: "15"
+    postgresVersion: "15"
 
 redis:
   - name: redis-cache
