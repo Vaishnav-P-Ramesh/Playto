@@ -5,6 +5,7 @@ services:
     plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn payout_engine.wsgi:application --bind 0.0.0.0:$PORT
+    preDeployCommand: python manage.py migrate && python manage.py seed_demo_data
     envVars:
       - key: DEBUG
         value: "False"
@@ -94,9 +95,8 @@ databases:
     engine: postgres
     plan: free
     postgresMajorVersion: "15"
-    initializer:
-      - startCommand: python manage.py migrate && python manage.py seed_demo_data
 
-redis:
+services:
   - name: redis-cache
+    type: redis
     plan: free
