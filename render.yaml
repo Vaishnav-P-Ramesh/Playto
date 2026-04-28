@@ -95,9 +95,7 @@ services:
 
   - type: pserv
     name: payout-db
-    ipWhitelist: []
     plan: free
-    postgresVersion: "15"
 
   - type: redis
     name: redis-cache
