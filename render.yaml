@@ -4,8 +4,8 @@ services:
     env: python
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: gunicorn payout_engine.wsgi:application --bind 0.0.0.0:$PORT
-    preDeployCommand: python manage.py migrate && python manage.py seed_demo_data
+    startCommand: >-
+      bash -lc "python manage.py migrate --noinput && python manage.py seed_demo_data && exec gunicorn payout_engine.wsgi:application --bind 0.0.0.0:$PORT"
     envVars:
       - key: DEBUG
         value: "False"
@@ -14,9 +14,8 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromService:
+        fromDatabase:
           name: payout-db
-          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -46,9 +45,8 @@ services:
           type: web
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromService:
+        fromDatabase:
           name: payout-db
-          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -78,9 +76,8 @@ services:
           type: web
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromService:
+        fromDatabase:
           name: payout-db
-          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -93,10 +90,12 @@ services:
           type: redis
           property: connectionString
 
-  - type: pserv
-    name: payout-db
+databases:
+  - name: payout-db
+    engine: postgres
     plan: free
+    postgresMajorVersion: "15"
 
-  - type: redis
-    name: redis-cache
+redis:
+  - name: redis-cache
     plan: free
