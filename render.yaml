@@ -91,6 +91,7 @@ services:
   - type: redis
     name: redis-cache
     plan: free
+    ipAllowList: []
 
 databases:
   - name: payout-db
