@@ -14,8 +14,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        fromDatabase:
+        fromService:
           name: payout-db
+          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -45,8 +46,9 @@ services:
           type: web
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromDatabase:
+        fromService:
           name: payout-db
+          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -76,8 +78,9 @@ services:
           type: web
           envVarKey: SECRET_KEY
       - key: DATABASE_URL
-        fromDatabase:
+        fromService:
           name: payout-db
+          type: pserv
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
@@ -90,12 +93,12 @@ services:
           type: redis
           property: connectionString
 
-databases:
-  - name: payout-db
-    engine: postgres
+  - type: pserv
+    name: payout-db
+    ipWhitelist: []
     plan: free
-    postgresMajorVersion: "15"
+    postgresVersion: "15"
 
-redis:
-  - name: redis-cache
+  - type: redis
+    name: redis-cache
     plan: free
